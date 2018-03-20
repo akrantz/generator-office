@@ -27,9 +27,19 @@ module.exports = yo.extend({
   constructor: function () {
     yo.apply(this, arguments);
 
-    this.argument('name', { type: String, required: false });
-    this.argument('host', { type: String, required: false });
     this.argument('framework', { type: String, required: false });
+
+    this.option('host', {
+      type: String,
+      required: false,
+      desc: 'Office app which will host the add-in.'
+    });
+
+    this.option('name', {
+      type: String,
+      required: false,
+      desc: 'Name of the add-in.'
+    });
 
     this.option('skip-install', {
       type: Boolean,

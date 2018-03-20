@@ -218,22 +218,20 @@ describe('new project - answers & args - jquery & typescript', () => {
 	 * Test addin when user pass in argument
 	 * "my-office-add-in"
 	 */
-  describe('argument: name', () => {
+  describe('command line: --name "Display Name"', () => {
     before((done) => {
       answers.host = 'excel';
       answers.framework = 'jquery';
-      argument[0] = projectEscapedName;
 
       helpers.run(path.join(__dirname, '../app'))
-        .withArguments(argument)
+        .withArguments([])
+        .withOptions({ name: projectDisplayName })
         .withPrompts(answers)
         .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name + '-manifest.xml';
+      let manifestFileName = projectEscapedName + '-manifest.xml';
 
       let expected = [
         manifestFileName,
@@ -261,22 +259,19 @@ describe('new project - answers & args - jquery & typescript', () => {
 	 * Test addin when user pass in argument
 	 * "my-office-add-in excel"
 	 */
-  describe('arguments: name host', () => {
+  describe('command line: --name "Display name" --host excel', () => {
     before((done) => {
       answers.framework = 'jquery';
-      argument[0] = projectEscapedName;
-      argument[1] = 'excel';
 
       helpers.run(path.join(__dirname, '../app'))
-        .withArguments(argument)
+        .withArguments([])
+        .withOptions({ name: projectDisplayName }, { host: 'excel' })
         .withPrompts(answers)
         .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name + '-manifest.xml';
+      let manifestFileName = projectEscapedName + '-manifest.xml';
 
       let expected = [
         manifestFileName,
@@ -304,22 +299,17 @@ describe('new project - answers & args - jquery & typescript', () => {
 	 * Test addin when user pass in argument
 	 * "my-office-add-in excel jquery"
 	 */
-  describe('arguments: name host framework', () => {
+  describe('command line: jquery --name "Display Name" --host excel', () => {
     before((done) => {
-      argument[0] = projectEscapedName;
-      argument[1] = 'excel';
-      argument[2] = 'jquery';
-
       helpers.run(path.join(__dirname, '../app'))
-        .withArguments(argument)
+        .withArguments(['jquery'])
+        .withOptions({ name: projectDisplayName }, { host: 'excel'})
         .withPrompts(answers)
         .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name + '-manifest.xml';
+      let manifestFileName = projectEscapedName + '-manifest.xml';
 
       let expected = [
         manifestFileName,

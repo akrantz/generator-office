@@ -28,7 +28,9 @@ describe('manifest-only project - answers', () => {
 	/** Test addin when user chooses jquery and typescript. */
   describe('manifest-only', () => {
     before((done) => {
-      helpers.run(path.join(__dirname, '../app')).withPrompts(answers).on('end', done);
+      helpers.run(path.join(__dirname, '../app'))
+        .withPrompts(answers)
+        .on('end', done);
     });
 
     it('creates expected files', (done) => {
@@ -63,25 +65,25 @@ describe('manifest-only project - answers & args - jquery & typescript', () => {
     framework: null,
     open: false
   };
-  let argument = [];
 
 	/**
-	 * Test addin when user pass in argument
+	 * Test addin when user provides --name option
 	 * "my-office-add-in"
 	 */
-  describe('argument: name', () => {
+  describe('command line: --name "Display Name"', () => {
     before((done) => {
       answers.host = 'excel';
-      answers.isManifestOnly = true;
-      argument[0] = projectEscapedName;
+      answers.isManifestOnly = true;      
 
-      helpers.run(path.join(__dirname, '../app')).withArguments(argument).withPrompts(answers).on('end', done);
+      helpers.run(path.join(__dirname, '../app'))
+        .withArguments([])
+        .withOptions({ name: projectEscapedName })
+        .withPrompts(answers)
+        .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name  + '-manifest.xml';
+      let manifestFileName = projectEscapedName  + '-manifest.xml';
 
       let expected = [
         manifestFileName,
@@ -101,18 +103,17 @@ describe('manifest-only project - answers & args - jquery & typescript', () => {
 	 * Test addin when user pass in argument
 	 * "my-office-add-in excel"
 	 */
-  describe('arguments: name host', () => {
+  describe('command line: --name "Display Name" --host excel', () => {    
     before((done) => {
-      argument[0] = projectEscapedName;
-      argument[1] = 'excel';
-
-      helpers.run(path.join(__dirname, '../app')).withArguments(argument).withPrompts(answers).on('end', done);
+      helpers.run(path.join(__dirname, '../app'))
+        .withArguments([])
+        .withOptions({ name: projectEscapedName }, { host: 'excel' })
+        .withPrompts(answers)
+        .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name  + '-manifest.xml';
+      let manifestFileName = projectEscapedName  + '-manifest.xml';
 
       let expected = [
         manifestFileName,
@@ -132,19 +133,17 @@ describe('manifest-only project - answers & args - jquery & typescript', () => {
 	 * Test addin when user pass in argument
 	 * "my-office-add-in excel manifest-only"
 	 */
-  describe('arguments: name host framework', () => {
+  describe('command line: manifest-only --name "Display Name" --host excel', () => {
     before((done) => {
-      argument[0] = projectEscapedName;
-      argument[1] = 'excel';
-      argument[2] = 'manifest-only';
-
-      helpers.run(path.join(__dirname, '../app')).withArguments(argument).withPrompts(answers).on('end', done);
+      helpers.run(path.join(__dirname, '../app'))
+        .withArguments(['manifest-only'])
+        .withOptions({ name: projectEscapedName }, { host: 'excel'})
+        .withPrompts(answers)
+        .on('end', done);
     });
 
     it('creates expected files', (done) => {
-      let host = argument[1] ? argument[1] : answers.host;
-      let name = argument[0] ? argument[0] : answers.name;
-      let manifestFileName = name  + '-manifest.xml';
+      let manifestFileName = projectEscapedName  + '-manifest.xml';
 
       let expected = [
         manifestFileName,
