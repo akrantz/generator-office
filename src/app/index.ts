@@ -70,9 +70,7 @@ module.exports = yo.extend({
     try {
       let jsTemplates = getDirectories(this.templatePath('js'));
       let tsTemplates = getDirectories(this.templatePath('ts'));
-      let manifests = getFiles(this.templatePath('manifest')).map(manifest => _.capitalize(manifest.replace('.xml', '')));
-      updateHostNames(manifests, 'Onenote', 'OneNote');
-      updateHostNames(manifests, 'Powerpoint', 'PowerPoint');
+      const hosts = getDirectories(this.templatePath('hosts'));
 
       /** begin prompting */
       /** whether to create a new folder for the project */
@@ -107,7 +105,7 @@ module.exports = yo.extend({
         message: 'Which Office client application would you like to support?',
         type: 'list',
         default: 'Excel',
-        choices: manifests.map(manifest => ({ name: manifest, value: manifest })),
+        choices: hosts.map(host => ({ name: host, value: host })),
         when: this.options.host == null
       }];
       let answerForHost = await this.prompt(askForHost);
@@ -259,7 +257,6 @@ module.exports = yo.extend({
       this.project.projectInternalName = _.kebabCase(this.project.name);
       this.project.projectDisplayName = this.project.name;
       this.project.projectId = uuid();
-      this.project.hostInternalName = _.toLower(this.project.host);
 
       if (this.project.folder) {
         this.destinationRoot(this.project.projectInternalName);
@@ -290,7 +287,7 @@ module.exports = yo.extend({
         }
 
         /** Copy the manifest */
-        this.fs.copyTpl(this.templatePath(`manifest/${this.project.hostInternalName}.xml`), this.destinationPath(`${this.project.projectInternalName}-manifest.xml`), this.project);
+        this.fs.copyTpl(this.templatePath(`hosts/${this.project.host}/manifest.xml`), this.destinationPath(`${this.project.projectInternalName}-manifest.xml`), this.project);
 
         if (this.project.framework === 'manifest-only') {
           this.fs.copyTpl(this.templatePath(`manifest-only/**`), this.destinationPath(), this.project);
