@@ -27,18 +27,27 @@ module.exports = yo.extend({
   constructor: function () {
     yo.apply(this, arguments);
 
+    const currentDir = path.resolve('.');
+    const dirName = path.basename(currentDir);
+
     this.argument('framework', { type: String, required: false });
 
-    this.option('host', {
+    this.option('output', {
       type: String,
       required: false,
-      desc: 'Office app which will host the add-in.'
+      desc: 'Location to place the generated output. If not specified, uses the current directory.'
     });
 
     this.option('name', {
       type: String,
       required: false,
-      desc: 'Name of the add-in.'
+      desc: 'Name of the add-in. If not specified, uses the directory name of the output location.'
+    });
+
+    this.option('host', {
+      type: String,
+      required: false,      
+      desc: 'Office app which will host the add-in.'
     });
 
     this.option('skip-install', {
@@ -71,6 +80,21 @@ module.exports = yo.extend({
       let jsTemplates = getDirectories(this.templatePath('js'));
       let tsTemplates = getDirectories(this.templatePath('ts'));
       const hosts = getDirectories(this.templatePath('hosts'));
+      const wantPrompt: boolean = (this.options.template === null); // prompt only if no arguments are specified
+  
+      // if prompts are not desired, provide defaults for options
+      if (!wantPrompt) {
+        // if output location is not specified, use the current folder
+        if (!this.options.output) {
+          this.options.output = path.resolve('.');
+        }
+
+        // if name is not specified, use the folder name of the output location
+        if (!this.options.name) {
+          this.options.name = path.basename(this.options.output);
+        }
+      }
+
 
       /** begin prompting */
       /** whether to create a new folder for the project */
@@ -79,7 +103,8 @@ module.exports = yo.extend({
         name: 'folder',
         message: 'Would you like to create a new subfolder for your project?',
         type: 'confirm',
-        default: false
+        default: false,
+        when: this.options.output == null
       }]);
       const durationForFolder = getTimeSpan(startForFolder);
 
@@ -102,7 +127,7 @@ module.exports = yo.extend({
         type: 'list',
         default: 'Excel',
         choices: hosts.map(host => ({ name: host, value: host })),
-        when: this.options.host == null
+        when: wantPrompt && (this.options.host == null)
       }]);
       let durationForHost = getTimeSpan(startForHost);
 
@@ -123,7 +148,7 @@ module.exports = yo.extend({
             value: true
           }
         ],
-        when: this.options.framework == null
+        when: wantPrompt && (this.options.framework == null)
       }]);
       let durationForManifestOnly = getTimeSpan(startForManifestOnly);
 
@@ -132,14 +157,17 @@ module.exports = yo.extend({
        */
       this.project = {
         folder: answerForFolder.folder,
+        output: this.options.output || null,
         name: this.options.name || answerForName.name,
-        host: this.options.host || answerForHost.host,
+        host: this.options.host || answerForHost.host || 'excel',        
         framework: this.options.framework || null,
         isManifestOnly: answerForManifestOnly.isManifestOnly
       };
+
       if (answerForManifestOnly.isManifestOnly) {
         this.project.framework = 'manifest-only';
       }
+
       if (this.options.framework != null) {
         if (this.options.framework === 'manifest-only') {
           this.project.isManifestOnly = true;
@@ -166,6 +194,7 @@ module.exports = yo.extend({
       else {
         this.project.ts = answerForTs.ts || false;
       }
+
       if (this.options.framework === 'react') {
         this.project.ts = true;
       }
@@ -209,7 +238,8 @@ module.exports = yo.extend({
           name: 'open',
           type: 'confirm',
           message: 'Would you like to open it now while we finish creating your project?',
-          default: true
+          default: true,
+          when: wantPrompt
         }
       ]);
       let endForResourcePage = getTime();
@@ -218,7 +248,9 @@ module.exports = yo.extend({
       this.project.duration = getTimeSpan(startForFolder, endForResourcePage);
 
       /** appInsights logging */
-      insight.trackEvent('Folder', { CreatedSubFolder: this.project.folder.toString() }, { durationForFolder });
+      if (this.project.folder) {
+        insight.trackEvent('Folder', { CreatedSubFolder: this.project.folder.toString() }, { durationForFolder });
+      }
       insight.trackEvent('Name', { Name: this.project.name }, { durationForName });
       insight.trackEvent('Host', { Host: this.project.host }, { durationForHost });
       insight.trackEvent('IsManifestOnly', { IsManifestOnly: this.project.isManifestOnly.toString() }, { durationForManifestOnly });
@@ -242,8 +274,11 @@ module.exports = yo.extend({
       this.project.projectInternalName = _.kebabCase(this.project.name);
       this.project.projectDisplayName = this.project.name;
       this.project.projectId = uuid();
+      this.project.hostInternalName = _.toLower(this.project.host);
 
-      if (this.project.folder) {
+      if (this.project.output) {
+        this.destinationRoot(this.project.output);
+      } else if (this.project.folder) {
         this.destinationRoot(this.project.projectInternalName);
       }
 
