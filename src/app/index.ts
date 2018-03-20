@@ -74,47 +74,41 @@ module.exports = yo.extend({
 
       /** begin prompting */
       /** whether to create a new folder for the project */
-      let startForFolder = (new Date()).getTime();
-      let askForFolder = [{
+      const startForFolder = getTime();
+      const answerForFolder = await this.prompt([{
         name: 'folder',
         message: 'Would you like to create a new subfolder for your project?',
         type: 'confirm',
         default: false
-      }];
-      let answerForFolder = await this.prompt(askForFolder);
-      let endForFolder = (new Date()).getTime();
-      let durationForFolder = (endForFolder - startForFolder) / 1000;
+      }]);
+      const durationForFolder = getTimeSpan(startForFolder);
 
       /** name for the project */
-      let startForName = (new Date()).getTime();
-      let askForName = [{
+      let startForName = getTime();
+      let answerForName = await this.prompt([{
         name: 'name',
         type: 'input',
         message: 'What do you want to name your add-in?',
         default: 'My Office Add-in',
         when: this.options.name == null
-      }];
-      let answerForName = await this.prompt(askForName);
-      let endForName = (new Date()).getTime();
-      let durationForName = (endForName - startForName) / 1000;
+      }]);
+      let durationForName = getTimeSpan(startForName);
 
       /** office client application that can host the addin */
-      let startForHost = (new Date()).getTime();
-      let askForHost = [{
+      let startForHost = getTime();
+      let answerForHost = await this.prompt([{
         name: 'host',
         message: 'Which Office client application would you like to support?',
         type: 'list',
         default: 'Excel',
         choices: hosts.map(host => ({ name: host, value: host })),
         when: this.options.host == null
-      }];
-      let answerForHost = await this.prompt(askForHost);
-      let endForHost = (new Date()).getTime();
-      let durationForHost = (endForHost - startForHost) / 1000;
+      }]);
+      let durationForHost = getTimeSpan(startForHost);
 
       /** set flag for manifest-only to prompt accordingly later */
-      let startForManifestOnly = (new Date()).getTime();
-      let askForManifestOnly = [{
+      let startForManifestOnly = getTime();
+      let answerForManifestOnly = await this.prompt([{
         name: 'isManifestOnly',
         message: 'Would you like to create a new add-in?',
         type: 'list',
@@ -130,10 +124,8 @@ module.exports = yo.extend({
           }
         ],
         when: this.options.framework == null
-      }];
-      let answerForManifestOnly = await this.prompt(askForManifestOnly); // trigger prompts and store user input
-      let endForManifestOnly = (new Date()).getTime();
-      let durationForManifestOnly = (endForManifestOnly - startForManifestOnly) / 1000;
+      }]);
+      let durationForManifestOnly = getTimeSpan(startForManifestOnly);
 
       /**
        * Configure user input to have correct values
@@ -158,19 +150,16 @@ module.exports = yo.extend({
 
       /** askForTs and askForFramework will only be triggered if it's not a manifest-only project */
       /** use TypeScript for the project */
-      let startForTs = (new Date()).getTime();
-      let askForTs = [
-        {
+      let startForTs = getTime();
+      let answerForTs = await this.prompt([{
           name: 'ts',
           type: 'confirm',
           message: 'Would you like to use TypeScript?',
           default: true,
           when: (this.options.js == null) && (!this.project.isManifestOnly) && (this.options.framework !== 'react')
-        }
-      ];
-      let answerForTs = await this.prompt(askForTs);
-      let endForTs = (new Date()).getTime();
-      let durationForTs = (endForTs - startForTs) / 1000;
+      }]);
+      let durationForTs = getTimeSpan(startForTs);
+
       if (!(this.options.js == null)) {
         this.project.ts = !this.options.js;
       }
@@ -182,8 +171,8 @@ module.exports = yo.extend({
       }
 
       /** technology used to create the addin (html / angular / etc) */
-      let startForFramework = (new Date()).getTime();
-      let askForFramework = [
+      let startForFramework = getTime();
+      let answerForFramework = await this.prompt([
         {
           name: 'framework',
           message: 'Choose a framework:',
@@ -200,10 +189,8 @@ module.exports = yo.extend({
           choices: jsTemplates.map(template => ({ name: _.capitalize(template), value: template })),
           when: (this.project.framework == null) && !this.project.ts && this.options.js && !answerForManifestOnly.isManifestOnly
         }
-      ];
-      let answerForFramework = await this.prompt(askForFramework);
-      let endForFramework = (new Date()).getTime();
-      let durationForFramework = (endForFramework - startForFramework) / 1000;
+      ]);
+      let durationForFramework = getTimeSpan(startForFramework);
 
       if (!(this.options.framework == null)) {
         this.project.framework = this.options.framework;
@@ -215,22 +202,20 @@ module.exports = yo.extend({
         this.project.framework = answerForFramework.framework;
       }
 
-      let startForResourcePage = (new Date()).getTime();
+      let startForResourcePage = getTime();
       this.log('\nFor more information and resources on your next steps, we have created a resource.html file in your project.');
-      let askForOpenResourcePage = [
-        /** ask to open resource page */
+      let answerForOpenResourcePage = await this.prompt([
         {
           name: 'open',
           type: 'confirm',
           message: 'Would you like to open it now while we finish creating your project?',
           default: true
         }
-      ];
-      let answerForOpenResourcePage = await this.prompt(askForOpenResourcePage);
-      let endForResourcePage = (new Date()).getTime();
-      let durationForResourcePage = (endForResourcePage - startForResourcePage) / 1000;
+      ]);
+      let endForResourcePage = getTime();
+      let durationForResourcePage = getTimeSpan(startForResourcePage, endForResourcePage);
       this.project.isResourcePageOpened = answerForOpenResourcePage.open;
-      this.project.duration = (endForResourcePage - startForFolder) / 1000;
+      this.project.duration = getTimeSpan(startForFolder, endForResourcePage);
 
       /** appInsights logging */
       insight.trackEvent('Folder', { CreatedSubFolder: this.project.folder.toString() }, { durationForFolder });
@@ -361,6 +346,14 @@ function getFiles(root) {
   return fs.readdirSync(root).filter(file => {
     return !(fs.statSync(path.join(root, file)).isDirectory());
   });
+}
+
+function getTime() {
+  return (new Date()).getTime();
+}
+
+function getTimeSpan(startTime, endTime = getTime()) {
+  return (endTime - startTime) / 1000;
 }
 
 function updateHostNames(arr, key, newval) {
